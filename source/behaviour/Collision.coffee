@@ -37,23 +37,34 @@ class Collision extends Behaviour
                 # Check if particles collide.
                 if distSq <= radii * radii
 
-                    # Compute real distance.
-                    dist = Math.sqrt distSq
+                    @collide(p, o)
 
-                    # Determine overlap.
-                    overlap = (p.radius + o.radius) - dist
-                    overlap += 0.5
+    collide: (p, o) ->
 
-                    # Total mass.
-                    mt = p.mass + o.mass
+        # Delta between particles positions.
+        (@_delta.copy o.pos).sub p.pos
 
-                    # Distribute collision responses.
-                    r1 = if @useMass then o.mass / mt else 0.5
-                    r2 = if @useMass then p.mass / mt else 0.5
+        # Squared distance between particles.
+        distSq = @_delta.magSq()
 
-                    # Move particles so they no longer overlap.
-                    p.pos.add (@_delta.clone().norm().scale overlap * -r1)
-                    o.pos.add (@_delta.norm().scale overlap * r2)
+        # Compute real distance.
+        dist = Math.sqrt distSq
 
-                    # Fire callback if defined.
-                    @callback?(p, o, overlap)
+        # Determine overlap.
+        overlap = (p.radius + o.radius) - dist
+        overlap += 0.5
+
+        # Total mass.
+        mt = p.mass + o.mass
+
+        # Distribute collision responses.
+        r1 = if @useMass then o.mass / mt else 0.5
+        r2 = if @useMass then p.mass / mt else 0.5
+
+        # Move particles so they no longer overlap.
+        p.pos.add (@_delta.clone().norm().scale overlap * -r1)
+        o.pos.add (@_delta.norm().scale overlap * r2)
+
+        # Fire callback if defined.
+        @callback?(p, o, overlap)
+

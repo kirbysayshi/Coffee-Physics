@@ -17,7 +17,7 @@ Collision = (function(_super) {
   }
 
   Collision.prototype.apply = function(p, dt, index) {
-    var dist, distSq, i, mt, o, overlap, r1, r2, radii, _ref, _results;
+    var distSq, i, o, radii, _ref, _results;
     _results = [];
     for (i = index, _ref = this.pool.length - 1; index <= _ref ? i <= _ref : i >= _ref; index <= _ref ? i++ : i--) {
       o = this.pool[i];
@@ -26,15 +26,7 @@ Collision = (function(_super) {
         distSq = this._delta.magSq();
         radii = p.radius + o.radius;
         if (distSq <= radii * radii) {
-          dist = Math.sqrt(distSq);
-          overlap = (p.radius + o.radius) - dist;
-          overlap += 0.5;
-          mt = p.mass + o.mass;
-          r1 = this.useMass ? o.mass / mt : 0.5;
-          r2 = this.useMass ? p.mass / mt : 0.5;
-          p.pos.add(this._delta.clone().norm().scale(overlap * -r1));
-          o.pos.add(this._delta.norm().scale(overlap * r2));
-          _results.push(typeof this.callback === "function" ? this.callback(p, o, overlap) : void 0);
+          _results.push(this.collide(p, o));
         } else {
           _results.push(void 0);
         }
@@ -43,6 +35,21 @@ Collision = (function(_super) {
       }
     }
     return _results;
+  };
+
+  Collision.prototype.collide = function(p, o) {
+    var dist, distSq, mt, overlap, r1, r2;
+    (this._delta.copy(o.pos)).sub(p.pos);
+    distSq = this._delta.magSq();
+    dist = Math.sqrt(distSq);
+    overlap = (p.radius + o.radius) - dist;
+    overlap += 0.5;
+    mt = p.mass + o.mass;
+    r1 = this.useMass ? o.mass / mt : 0.5;
+    r2 = this.useMass ? p.mass / mt : 0.5;
+    p.pos.add(this._delta.clone().norm().scale(overlap * -r1));
+    o.pos.add(this._delta.norm().scale(overlap * r2));
+    return typeof this.callback === "function" ? this.callback(p, o, overlap) : void 0;
   };
 
   return Collision;
