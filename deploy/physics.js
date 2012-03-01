@@ -275,6 +275,10 @@ Particle = (function() {
       vel: new Vector(),
       acc: new Vector()
     };
+    this.aabb = {
+      min: [0, 0],
+      max: [0, 0]
+    };
   }
 
   /* Moves the particle to a given location vector.
@@ -299,6 +303,16 @@ Particle = (function() {
   Particle.prototype.setRadius = function(radius) {
     this.radius = radius != null ? radius : 1.0;
     return this.radiusSq = this.radius * this.radius;
+  };
+
+  Particle.prototype.getAABB = function() {
+    this.aabb.min[0] = this.pos.x - this.radius;
+    this.aabb.min[1] = this.pos.y - this.radius;
+    this.aabb.min[2] = this.pos.y - this.radius;
+    this.aabb.max[0] = this.pos.x + this.radius;
+    this.aabb.max[1] = this.pos.y + this.radius;
+    this.aabb.max[2] = this.pos.y + this.radius;
+    return this.aabb;
   };
 
   /* Applies all behaviours to derive new force.
@@ -361,6 +375,7 @@ Physics = (function() {
     this.timestep = 1.0 / 60;
     this.viscosity = 0.005;
     this.behaviours = [];
+    this.worldBehaviours = [];
     this._time = 0.0;
     this._step = 0.0;
     this._clock = null;
@@ -374,7 +389,7 @@ Physics = (function() {
   */
 
   Physics.prototype.integrate = function(dt) {
-    var behaviour, drag, index, particle, spring, _i, _j, _len, _len2, _len3, _ref, _ref2, _ref3, _results;
+    var behaviour, drag, index, particle, spring, _i, _j, _k, _len, _len2, _len3, _len4, _ref, _ref2, _ref3, _ref4, _results;
     drag = 1.0 - this.viscosity;
     _ref = this.particles;
     for (index = 0, _len = _ref.length; index < _len; index++) {
@@ -386,11 +401,16 @@ Physics = (function() {
       }
       particle.update(dt, index);
     }
-    this.integrator.integrate(this.particles, dt, drag);
-    _ref3 = this.springs;
-    _results = [];
+    _ref3 = this.worldBehaviours;
     for (_j = 0, _len3 = _ref3.length; _j < _len3; _j++) {
-      spring = _ref3[_j];
+      behaviour = _ref3[_j];
+      behaviour.apply(this, dt, index);
+    }
+    this.integrator.integrate(this.particles, dt, drag);
+    _ref4 = this.springs;
+    _results = [];
+    for (_k = 0, _len4 = _ref4.length; _k < _len4; _k++) {
+      spring = _ref4[_k];
       _results.push(spring.apply());
     }
     return _results;
@@ -507,7 +527,7 @@ Collision = (function(_super) {
   }
 
   Collision.prototype.apply = function(p, dt, index) {
-    var dist, distSq, i, mt, o, overlap, r1, r2, radii, _ref, _results;
+    var distSq, i, o, radii, _ref, _results;
     _results = [];
     for (i = index, _ref = this.pool.length - 1; index <= _ref ? i <= _ref : i >= _ref; index <= _ref ? i++ : i--) {
       o = this.pool[i];
@@ -516,15 +536,7 @@ Collision = (function(_super) {
         distSq = this._delta.magSq();
         radii = p.radius + o.radius;
         if (distSq <= radii * radii) {
-          dist = Math.sqrt(distSq);
-          overlap = (p.radius + o.radius) - dist;
-          overlap += 0.5;
-          mt = p.mass + o.mass;
-          r1 = this.useMass ? o.mass / mt : 0.5;
-          r2 = this.useMass ? p.mass / mt : 0.5;
-          p.pos.add(this._delta.clone().norm().scale(overlap * -r1));
-          o.pos.add(this._delta.norm().scale(overlap * r2));
-          _results.push(typeof this.callback === "function" ? this.callback(p, o, overlap) : void 0);
+          _results.push(this.collide(p, o));
         } else {
           _results.push(void 0);
         }
@@ -533,6 +545,21 @@ Collision = (function(_super) {
       }
     }
     return _results;
+  };
+
+  Collision.prototype.collide = function(p, o) {
+    var dist, distSq, mt, overlap, r1, r2;
+    (this._delta.copy(o.pos)).sub(p.pos);
+    distSq = this._delta.magSq();
+    dist = Math.sqrt(distSq);
+    overlap = (p.radius + o.radius) - dist;
+    overlap += 0.5;
+    mt = p.mass + o.mass;
+    r1 = this.useMass ? o.mass / mt : 0.5;
+    r2 = this.useMass ? p.mass / mt : 0.5;
+    p.pos.add(this._delta.clone().norm().scale(overlap * -r1));
+    o.pos.add(this._delta.norm().scale(overlap * r2));
+    return typeof this.callback === "function" ? this.callback(p, o, overlap) : void 0;
   };
 
   return Collision;
