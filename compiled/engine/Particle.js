@@ -18,6 +18,10 @@ Particle = (function() {
       vel: new Vector(),
       acc: new Vector()
     };
+    this.aabb = {
+      min: [0, 0],
+      max: [0, 0]
+    };
   }
 
   /* Moves the particle to a given location vector.
@@ -42,6 +46,16 @@ Particle = (function() {
   Particle.prototype.setRadius = function(radius) {
     this.radius = radius != null ? radius : 1.0;
     return this.radiusSq = this.radius * this.radius;
+  };
+
+  Particle.prototype.getAABB = function() {
+    this.aabb.min[0] = this.pos.x - this.radius;
+    this.aabb.min[1] = this.pos.y - this.radius;
+    this.aabb.min[2] = this.pos.y - this.radius;
+    this.aabb.max[0] = this.pos.x + this.radius;
+    this.aabb.max[1] = this.pos.y + this.radius;
+    this.aabb.max[2] = this.pos.y + this.radius;
+    return this.aabb;
   };
 
   /* Applies all behaviours to derive new force.

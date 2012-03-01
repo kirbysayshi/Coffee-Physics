@@ -30,6 +30,11 @@ class Particle
 			vel: new Vector()
 			acc: new Vector()
 
+		@aabb = 
+			min: [0, 0]
+			max: [0, 0]
+
+
 	### Moves the particle to a given location vector. ###
 	moveTo: (pos) ->
 
@@ -46,6 +51,18 @@ class Particle
 	setRadius: (@radius = 1.0) ->
 
 		@radiusSq = @radius * @radius
+
+	getAABB: () ->
+
+		@aabb.min[0] = @pos.x - @radius
+		@aabb.min[1] = @pos.y - @radius
+		@aabb.min[2] = @pos.y - @radius
+
+		@aabb.max[0] = @pos.x + @radius
+		@aabb.max[1] = @pos.y + @radius
+		@aabb.max[2] = @pos.y + @radius
+
+		return @aabb
 
 	### Applies all behaviours to derive new force. ###
 	update: (dt, index) ->
