@@ -9,6 +9,7 @@ Physics = (function() {
     this.timestep = 1.0 / 60;
     this.viscosity = 0.005;
     this.behaviours = [];
+    this.worldBehaviours = [];
     this._time = 0.0;
     this._step = 0.0;
     this._clock = null;
@@ -22,7 +23,7 @@ Physics = (function() {
   */
 
   Physics.prototype.integrate = function(dt) {
-    var behaviour, drag, index, particle, spring, _i, _j, _len, _len2, _len3, _ref, _ref2, _ref3, _results;
+    var behaviour, drag, index, particle, spring, _i, _j, _k, _len, _len2, _len3, _len4, _ref, _ref2, _ref3, _ref4, _results;
     drag = 1.0 - this.viscosity;
     _ref = this.particles;
     for (index = 0, _len = _ref.length; index < _len; index++) {
@@ -34,11 +35,16 @@ Physics = (function() {
       }
       particle.update(dt, index);
     }
-    this.integrator.integrate(this.particles, dt, drag);
-    _ref3 = this.springs;
-    _results = [];
+    _ref3 = this.worldBehaviours;
     for (_j = 0, _len3 = _ref3.length; _j < _len3; _j++) {
-      spring = _ref3[_j];
+      behaviour = _ref3[_j];
+      behaviour.apply(this, dt, index);
+    }
+    this.integrator.integrate(this.particles, dt, drag);
+    _ref4 = this.springs;
+    _results = [];
+    for (_k = 0, _len4 = _ref4.length; _k < _len4; _k++) {
+      spring = _ref4[_k];
       _results.push(spring.apply());
     }
     return _results;

@@ -13,6 +13,9 @@ class Physics
 		# Global behaviours.
 		@behaviours = []
 
+		# World behaviors, applied once per integration
+		@worldBehaviours = []
+
 		# Time in seconds.
 		@_time = 0.0
 
@@ -49,6 +52,10 @@ class Physics
 				behaviour.apply particle, dt, index
 			
 			particle.update dt, index
+
+		for behaviour in @worldBehaviours
+
+			behaviour.apply @, dt, index	
 
 		# Integrate motion.
 
