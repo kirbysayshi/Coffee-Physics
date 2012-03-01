@@ -85,6 +85,7 @@
     <script src="compiled/behaviour/EdgeBounce.js"></script>
     <script src="compiled/behaviour/EdgeWrap.js"></script>
     <script src="compiled/behaviour/Wander.js"></script>
+    <script src="compiled/behaviour/WorldHashedCollision.js"></script>
     <!-- Demo Renderers -->
     <script src="compiled/demos/renderer/Renderer.js"></script>
     <script src="compiled/demos/renderer/CanvasRenderer.js"></script>
@@ -108,7 +109,7 @@
                 //'Bounds': BoundsDemo,
                 'Chain': ChainDemo,
                 'Cloth': ClothDemo,
-                'Collision': CollisionDemo
+                'Collision': CollisionDemo,
             };
 
             var doUpdate = true;
@@ -171,9 +172,9 @@
                 stats.style.top = '62px';
                 document.body.appendChild(stats);
 
-                window.addEventListener('click', function(){
+                document.querySelectorAll('#container')[0].addEventListener('click', function(){
                     doUpdate = false;
-                });
+                }, false);
 
                 // Start.
                 test.update();
